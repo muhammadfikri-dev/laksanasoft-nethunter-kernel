@@ -1,15 +1,19 @@
 name: Build Laksanasoft NetHunter Kernel (beyond2lte)
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build-kernel:
+  build:
     name: Compile NetHunter Kernel (Samsung S10+ beyond2lte)
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -24,7 +28,9 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends             build-essential bc bison flex libssl-dev libelf-dev libncurses5-dev             zip unzip curl wget git ca-certificates libarchive-tools xz-utils
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bison flex libssl-dev libelf-dev libncurses5-dev \
+            zip unzip curl wget git ca-certificates libarchive-tools xz-utils
 
       - name: Download Toolchains (AOSP Clang & GCC Cross-Compilers)
         run: |
@@ -32,16 +38,16 @@ jobs:
           cd $GITHUB_WORKSPACE/toolchains
 
           # Download AOSP Clang 10 (r377782b)
-          echo 'Downloading AOSP Clang 10.0.4...'
+          echo "Downloading AOSP Clang 10.0.4..."
           wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/0cb1afdb060d6619a9837ab6866cf4adf2336416/clang-r377782b.tar.gz
           mkdir -p clang
           tar -xf clang-r377782b.tar.gz -C clang
           rm -f clang-r377782b.tar.gz
 
           # Download AOSP GCC 64-bit & 32-bit
-          echo 'Cloning GCC 64-bit...'
+          echo "Cloning GCC 64-bit..."
           git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 gcc64
-          echo 'Cloning GCC 32-bit...'
+          echo "Cloning GCC 32-bit..."
           git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 gcc32
 
       - name: Clone NetHunter Kernel Source
@@ -130,7 +136,7 @@ jobs:
           make -j$(nproc --all) O=out
 
           if [ ! -f out/arch/arm64/boot/Image ]; then
-            echo 'ERROR: Kernel Image binary was not generated!'
+            echo "ERROR: Kernel Image binary was not generated!"
             exit 1
           fi
 

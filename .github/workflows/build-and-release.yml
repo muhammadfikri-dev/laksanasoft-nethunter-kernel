@@ -1,15 +1,13 @@
-name: Build Laksanasoft NetHunter Kernel (beyond2lte)
+name: Build and Release Laksanasoft NetHunter Kernel
 
 on:
-  workflow_dispatch:
-    inputs:
-      dummy:
-        description: 'Trigger build'
-        required: false
-        default: 'run'
   push:
     branches:
       - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -33,7 +31,9 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends             build-essential bc bison flex libssl-dev libelf-dev libncurses5-dev             zip unzip curl wget git ca-certificates libarchive-tools xz-utils
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bison flex libssl-dev libelf-dev libncurses5-dev \
+            zip unzip curl wget git ca-certificates libarchive-tools xz-utils
 
       - name: Download Toolchains (AOSP Clang & GCC Cross-Compilers)
         run: |
@@ -200,7 +200,7 @@ write_boot;
 ## end boot install
 EOF
 
-          sed -i 's/$//' anykernel.sh
+          sed -i 's/\r$//' anykernel.sh
 
           # Buat laksanasoftkernel.zip
           zip -r9 $GITHUB_WORKSPACE/laksanasoftkernel.zip * -x .git README.md *placeholder
@@ -214,3 +214,16 @@ EOF
           path: laksanasoftkernel.zip
           if-no-files-found: error
           retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: laksanasoftkernel.zip
+          name: "Laksanasoft NetHunter Kernel ${{ github.ref_name }}"
+          body: |
+            ## Kali NetHunter Kernel for Samsung Galaxy S10+ (beyond2lte)
+            - Chipset: Exynos 9820
+            - Features: SysV IPC (Metasploit), mac80211 WiFi Injection, BadUSB HID, Bluetooth Arsenal, DriveDroid.
+          draft: false
+          prerelease: false

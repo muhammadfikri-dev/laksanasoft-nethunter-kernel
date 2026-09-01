@@ -15,7 +15,7 @@ permissions:
 jobs:
   build:
     name: Compile NetHunter Kernel (Samsung S10+ beyond2lte)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
